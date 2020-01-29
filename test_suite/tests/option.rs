@@ -2,8 +2,11 @@
 extern crate envconfig_derive;
 extern crate envconfig;
 
-use envconfig::{Envconfig, Error};
 use std::env;
+use std::error::Error as _;
+use std::num::ParseIntError;
+
+use envconfig::Envconfig;
 
 #[derive(Envconfig)]
 pub struct Config {
@@ -38,6 +41,9 @@ fn test_var_is_invalid() {
 
     env::set_var("PORT", "xyz");
     let err = Config::init().err().unwrap();
-    let expected_err = Error::ParseError { name: "PORT" };
-    assert_eq!(err, expected_err);
+    assert!(
+        err.source().unwrap().is::<ParseIntError>(),
+        "{:?}",
+        &err.source()
+    );
 }

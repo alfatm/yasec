@@ -1,26 +1,25 @@
 # Envconfig
 
-[![Build Status](https://travis-ci.org/greyblake/envconfig-rs.svg?branch=master)](https://travis-ci.org/greyblake/envconfig-rs)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/greyblake/envconfig-rs/master/LICENSE)
-[![Documentation](https://docs.rs/envconfig/badge.svg)](https://docs.rs/envconfig)
+[![Build Status](https://travis-ci.org/ANtlord/yasec.svg?branch=master)](https://travis-ci.org/ANtlord/yasec)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Build a config structure from environment variables in Rust without boilerplate.
 
+## Features
+
+* Nested configuration structure.
+* Inferring of an environment variable name. If a configuration field has name `password` then it gets value from environment variable `PASSWORD`.
+If a configuration field is inside another structure and it has path `db.password` it gets its value from variable `DB_PASSWORD`.
+* Custom types.
+* Option type is optional.
+* Prefix of variables.
+
+## Macro attributes
+
+* `from` - name of an environment variable which provides a field value. Name of the field and name of the parent structures are ignored.
+* `default` - default value of a field if an environment variable doesn't exist. If the environment variable exist but has invalid value an error returns.
+
 ## Usage
-
-Let's say you application relies on the following environment variables:
-
-* `DB_HOST`
-* `DB_PORT`
-
-And you want to initialize `Config` structure like this one:
-
-```rust,ignore
-struct Config {
-    host: String,
-    port: u16,
-}
-```
 
 You can achieve this with the following code without boilerplate:
 
@@ -29,26 +28,71 @@ You can achieve this with the following code without boilerplate:
 extern crate envconfig_derive;
 extern crate envconfig;
 
+use std::error::Error as StdError;
 use envconfig::Envconfig;
 
 #[derive(Envconfig)]
-pub struct Config {
-    #[envconfig(from = "DB_HOST")]
-    pub db_host: String,
+pub struct DB {
+    pub host: String,
+    pub port: u16,
+}
 
-    #[envconfig(from = "DB_PORT", default = "5432")]
-    pub db_port: u16,
+#[derive(Envconfig)]
+pub struct Vendor {
+    #[envconfig(from = "API_KEY")]
+    pub key: String,
+    #[envconfig(from = "API_SECRET")]
+    pub secret: String,
+}
+
+#[derive(Envconfig)]
+pub struct Config {
+    db: DB,
+    vendor: Vendor,
+    #[envconfig(default = 8080)]
+    listen_port: u16,
+    callback_url: Option<String>,
+    mode: Mode,
+}
+
+pub enum Mode {
+    Client,
+    Server,
+}
+
+impl Envconfig for Mode {
+    fn parse(s: &str) -> Result<Self, Box<dyn StdError>> {
+        match s {
+            "CLIENT" => Ok(Self::Client),
+            "SERVER" => Ok(Self::Server),
+            _ => Err(envconfig::ParseError::new(s).into()),
+        }
+    }
 }
 
 fn main() {
     // Assuming the following environment variables are set
     std::env::set_var("DB_HOST", "127.0.0.1");
+    std::env::set_var("DB_PORT", "5432");
+    std::env::set_var("API_KEY", "0912xn819b8s1029s");
+    std::env::set_var("API_SECRET", "zyYWn5pPtLcDSaFWQEu0nf1cf0eYNN8j");
+    std::env::set_var("MODE", "SERVER");
+    std::env::remove_var("LISTEN_PORT");
+    std::env::remove_var("CALLBACK_URL");
 
     // Initialize config from environment variables or terminate the process.
     let config = Config::init().unwrap();
 
-    assert_eq!(config.db_host, "127.0.0.1");
-    assert_eq!(config.db_port, 5432);
+    assert_eq!(config.db.host, "127.0.0.1");
+    assert_eq!(config.db.port, 5432);
+    assert_eq!(config.vendor.key, "0912xn819b8s1029s");
+    assert_eq!(config.vendor.secret, "zyYWn5pPtLcDSaFWQEu0nf1cf0eYNN8j");
+    assert_eq!(config.listen_port, 8080);
+    assert_eq!(config.callback_url, None);
+    match config.mode {
+        Mode::Server => (),
+        _ => panic!("Unexpected value of Mode"),
+    }
 }
 ```
 
@@ -61,18 +105,6 @@ prevent flaky tests they have to be executed in a single thread:
 cargo test -- --test-threads=1
 ```
 
-## Roadmap
-
-* [x] - migrate to the latest versions of `syn` and `quote`
-* [x] - support `Option<T>` ([issue](https://github.com/greyblake/envconfig-rs/issues/10))
-* [x] - support `default` attribute ([issue](https://github.com/greyblake/envconfig-rs/issues/3))
-* [x] - support nested structures?
-
 ## License
 
-[MIT](https://github.com/greyblake/envconfig-rs/blob/master/LICENSE) © [Sergey Potapov](http://greyblake.com/)
-
-## Contributors
-
-- [greyblake](https://github.com/greyblake) Potapov Sergey - creator, maintainer.
-- [allevo](https://github.com/allevo) Tommaso Allevi - support nested structures
+Licensed under [MIT](LICENSE)

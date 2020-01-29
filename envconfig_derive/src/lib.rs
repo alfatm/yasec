@@ -42,7 +42,7 @@ fn impl_envconfig_for_struct(
 
     quote! {
         impl Envconfig for #struct_name {
-            fn init() -> ::std::result::Result<Self, ::envconfig::Error> {
+            fn with_context(context: ::envconfig::Context<Self>) -> ::std::result::Result<Self, ::envconfig::Error> {
                 let config = Self {
                     #(#field_assigns,)*
                 };
@@ -53,68 +53,73 @@ fn impl_envconfig_for_struct(
 }
 
 fn gen_field_assign(field: &Field) -> proc_macro2::TokenStream {
-    let attr = fetch_envconfig_attr_from_field(field);
-
-    if let Some(attr) = attr {
-        let list = fetch_list_from_attr(field, attr);
-        let from_value = find_item_in_list_or_panic(field, &list, "from");
-        let opt_default = find_item_in_list(field, &list, "default");
-
-        let field_type = &field.ty;
-
-        if to_s(field_type).starts_with("Option ") {
-            gen_field_assign_for_optional_type(field, from_value, opt_default)
-        } else {
-            gen_field_assign_for_non_optional_type(field, from_value, opt_default)
+    match fetch_envconfig_attr_from_field(field) {
+        Some(attr) => {
+            let list = fetch_list_from_attr(field, attr);
+            let from_value = find_item_in_list(field, &list, "from");
+            let opt_default = find_item_in_list(field, &list, "default");
+            gen_field_assign_for_struct_type(field, from_value, opt_default)
         }
-    } else {
-        gen_field_assign_for_struct_type(field)
+        None => gen_field_assign_for_struct_type(field, None, None),
     }
 }
 
-fn gen_field_assign_for_struct_type(field: &Field) -> proc_macro2::TokenStream {
+// converts Option<T> to Option::<T>
+fn norm_path(path: &mut syn::TypePath) {
+    path.path.segments.iter_mut().for_each(|segment| {
+        let ref mut args = segment.arguments;
+        if args.is_empty() {
+            return;
+        }
+
+        match args {
+            syn::PathArguments::AngleBracketed(ref mut x) if x.colon2_token.is_none() => {
+                x.colon2_token = Some(syn::Token!(::)([
+                    proc_macro2::Span::call_site(),
+                    proc_macro2::Span::call_site(),
+                ]))
+            }
+            _ => (),
+        }
+    });
+}
+
+fn remove_quotes(val: &str) -> String {
+    val.chars().skip(1).take(val.len() - 2).collect()
+}
+
+fn gen_field_assign_for_struct_type(
+    field: &Field,
+    name: Option<&Lit>,
+    default: Option<&Lit>,
+) -> proc_macro2::TokenStream {
     let ident = &field.ident;
+    let var_name = name.map(|x| remove_quotes(&to_s(x))).unwrap_or_default();
+    let ident_str = to_s(ident).to_uppercase();
     match &field.ty {
         syn::Type::Path(path) => {
-            quote! {
-                #ident: #path :: init()?
+            let mut path = path.clone();
+            norm_path(&mut path);
+            match default {
+                Some(_) => quote! {
+                    #ident: #path :: with_context(
+                        context
+                            .with_var_name(#var_name)
+                            .push_prefix(#ident_str.to_owned())
+                            .with_default_var_value(Some(#default))
+                    )?
+                },
+                None => quote! {
+                    #ident: #path :: with_context(
+                        context
+                            .with_var_name(#var_name)
+                            .push_prefix(#ident_str.to_owned())
+                            .with_default_var_value(None)
+                    )?
+                },
             }
         }
         _ => panic!(format!("Expected field type to be a path: {:?}", ident)),
-    }
-}
-
-fn gen_field_assign_for_optional_type(
-    field: &Field,
-    from: &Lit,
-    opt_default: Option<&Lit>,
-) -> proc_macro2::TokenStream {
-    let ident = &field.ident;
-
-    if opt_default.is_some() {
-        panic!("Optional type on field `{}` with default value does not make sense and therefore is not allowed", to_s(ident));
-    } else {
-        quote! {
-            #ident: ::envconfig::load_optional_var(#from)?
-        }
-    }
-}
-
-fn gen_field_assign_for_non_optional_type(
-    field: &Field,
-    from: &Lit,
-    opt_default: Option<&Lit>,
-) -> proc_macro2::TokenStream {
-    let ident = &field.ident;
-
-    if let Some(default) = opt_default {
-        quote! {
-            #ident: ::envconfig::load_var_with_default(#from, #default)?
-        }
-    } else {
-        quote! {
-            #ident: ::envconfig::load_var(#from)?
-        }
     }
 }
 
@@ -141,20 +146,6 @@ fn fetch_list_from_attr(field: &Field, attr: &Attribute) -> Punctuated<NestedMet
             field_name(field)
         ),
     }
-}
-
-fn find_item_in_list_or_panic<'l, 'n>(
-    field: &Field,
-    list: &'l Punctuated<NestedMeta, Comma>,
-    item_name: &'n str,
-) -> &'l Lit {
-    find_item_in_list(field, list, item_name).unwrap_or_else(|| {
-        panic!(
-            "`envconfig` attribute on field `{}` must contain `{}` item",
-            field_name(field),
-            item_name
-        )
-    })
 }
 
 fn find_item_in_list<'l, 'n>(

@@ -67,7 +67,7 @@ fn gen_field_assign(field: &Field) -> proc_macro2::TokenStream {
 // converts Option<T> to Option::<T>
 fn norm_path(path: &mut syn::TypePath) {
     path.path.segments.iter_mut().for_each(|segment| {
-        let ref mut args = segment.arguments;
+        let args = &mut segment.arguments;
         if args.is_empty() {
             return;
         }

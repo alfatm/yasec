@@ -12,7 +12,7 @@ impl<T> Context<T> {
             var_name: String::default(),
             default_var_value: None,
         };
-        if prefix.len() > 0 {
+        if !prefix.is_empty() {
             ret.prefix.push(prefix);
         }
         ret

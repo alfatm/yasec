@@ -1,4 +1,4 @@
-# Envconfig
+# Yasec
 
 [![Build Status](https://travis-ci.org/ANtlord/yasec.svg?branch=master)](https://travis-ci.org/ANtlord/yasec)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)

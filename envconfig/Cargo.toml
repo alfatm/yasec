@@ -15,4 +15,4 @@ documentation = "https://docs.rs/envconfig"
 readme = "README.md"
 
 [dev-dependencies]
-envconfig_derive = { version = "0.6.0", path = "../envconfig_derive" }
+envconfig_derive = { version = "1.0.0", path = "../envconfig_derive" }

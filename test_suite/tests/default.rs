@@ -7,7 +7,7 @@ use std::env;
 
 #[derive(Envconfig)]
 pub struct Config {
-    #[envconfig(from = "PORT", default = "5432")]
+    #[envconfig(from = "PORT", default = 5432)]
     pub port: u16,
 }
 

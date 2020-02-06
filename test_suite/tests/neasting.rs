@@ -2,8 +2,9 @@
 extern crate envconfig_derive;
 extern crate envconfig;
 
-use envconfig::{Envconfig, Error};
+use envconfig::Envconfig;
 use std::env;
+use std::error::Error as _;
 
 #[derive(Envconfig)]
 pub struct DBConfig {
@@ -49,8 +50,9 @@ fn test_neasting_error() {
     env::set_var("DB_HOST", "localhost");
 
     let err = Config::init().err().unwrap();
-    let expected_err = Error::EnvVarMissing { name: "DB_PORT" };
-    assert_eq!(err, expected_err);
+
+    // let expected_err = Error::EnvVarMissing { name: "DB_PORT".to_owned() };
+    assert_eq!(true, err.source().unwrap().is::<env::VarError>());
 }
 
 #[test]

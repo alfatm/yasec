@@ -2,8 +2,11 @@
 extern crate envconfig_derive;
 extern crate envconfig;
 
-use envconfig::{Envconfig, Error};
 use std::env;
+use std::error::Error as _;
+use std::num::ParseIntError;
+
+use envconfig::Envconfig;
 
 #[derive(Envconfig)]
 pub struct Config {
@@ -38,8 +41,9 @@ fn test_checks_presence_of_env_vars() {
     env::set_var("DB_HOST", "localhost");
 
     let err = Config::init().err().unwrap();
-    let expected_err = Error::EnvVarMissing { name: "DB_PORT" };
-    assert_eq!(err, expected_err);
+    // let expected_err = Error::EnvVarMissing { name: "DB_PORT".to_owned() };
+    // assert_eq!(err, expected_err);
+    assert_eq!(true, err.source().unwrap().is::<env::VarError>());
 }
 
 #[test]
@@ -50,14 +54,15 @@ fn test_fails_if_can_not_parse_db_port() {
     env::set_var("DB_PORT", "67000");
 
     let err = Config::init().err().unwrap();
-    let expected_err = Error::ParseError { name: "DB_PORT" };
-    assert_eq!(err, expected_err);
+    assert!(
+        err.source().unwrap().is::<ParseIntError>(),
+        format!("{:?}", &err.source())
+    );
 }
 
 #[test]
 fn test_custom_from_str() {
-    use std::num::ParseIntError;
-    use std::str::FromStr;
+    use std::error::Error as StdError;
 
     setup();
 
@@ -67,10 +72,8 @@ fn test_custom_from_str() {
         y: i32,
     }
 
-    impl FromStr for Point {
-        type Err = ParseIntError;
-
-        fn from_str(s: &str) -> Result<Self, Self::Err> {
+    impl Envconfig for Point {
+        fn parse(s: &str) -> Result<Self, Box<dyn StdError>> {
             let coords: Vec<&str> = s
                 .trim_matches(|p| p == '(' || p == ')')
                 .split(',')
@@ -96,4 +99,69 @@ fn test_custom_from_str() {
 
     let err = Config::init().unwrap();
     assert_eq!(err.point, Point { x: 1, y: 2 });
+}
+
+mod infer {
+    use super::*;
+    #[test]
+    fn test_basic() {
+        #[derive(Envconfig)]
+        pub struct Config {
+            user: String,
+            pass: String,
+        }
+
+        let user = "root";
+        let pass = "secret";
+        env::set_var("USER", &user);
+        env::set_var("PASS", &pass);
+
+        let config = Config::init().unwrap();
+        assert_eq!(config.user, user);
+        assert_eq!(config.pass, pass);
+    }
+
+    #[test]
+    fn test_nested() {
+        #[derive(Envconfig)]
+        pub struct DB {
+            user: String,
+            pass: String,
+        }
+
+        #[derive(Envconfig)]
+        pub struct Config {
+            db: DB,
+            listen_port: u16,
+        }
+
+        let user = "root";
+        let pass = "secret";
+        let port = 1234;
+        env::set_var("DB_USER", &user);
+        env::set_var("DB_PASS", &pass);
+        env::set_var("LISTEN_PORT", &port.to_string());
+
+        let config = Config::init().unwrap();
+        assert_eq!(config.db.user, user);
+        assert_eq!(config.db.pass, pass);
+        assert_eq!(config.listen_port, port);
+    }
+
+    #[test]
+    fn test_optional() {
+        #[derive(Envconfig)]
+        pub struct Config {
+            listen_port: Option<u16>,
+            address: String,
+        }
+
+        let port = Some(1235u16);
+        let address = "localhost";
+        env::set_var("LISTEN_PORT", "1235");
+        env::set_var("ADDRESS", &address.to_string());
+        let config = Config::init().unwrap();
+        assert_eq!(config.listen_port, port);
+        assert_eq!(config.address, address);
+    }
 }

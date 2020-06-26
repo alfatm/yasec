@@ -1,26 +1,26 @@
 #[macro_use]
-extern crate envconfig_derive;
-extern crate envconfig;
+extern crate yasec_derive;
+extern crate yasec;
 
-use envconfig::Envconfig;
+use yasec::Yasec;
 use std::env;
 use std::error::Error as _;
 
-#[derive(Envconfig)]
+#[derive(Yasec)]
 pub struct DBConfig {
-    #[envconfig(from = "DB_HOST")]
+    #[yasec(from = "DB_HOST")]
     pub host: String,
 
-    #[envconfig(from = "DB_PORT")]
+    #[yasec(from = "DB_PORT")]
     pub port: u16,
 }
 
-#[derive(Envconfig)]
+#[derive(Yasec)]
 pub struct Config {
     pub db: DBConfig,
 }
 
-#[derive(Envconfig)]
+#[derive(Yasec)]
 pub struct ConfigDouble {
     pub db1: DBConfig,
     pub db2: DBConfig,

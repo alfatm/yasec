@@ -1,4 +1,4 @@
-//! Envconfig is a Rust library that helps to initialize configuration structure
+//! Yasec is a Rust library that helps to initialize configuration structure
 //! from environment variables.
 //! It makes use of custom derive macros to reduce boilerplate.
 //!
@@ -6,21 +6,21 @@
 //!
 //! ```
 //! #[macro_use]
-//! extern crate envconfig_derive;
-//! extern crate envconfig;
+//! extern crate yasec_derive;
+//! extern crate yasec;
 //!
 //! use std::env;
-//! use envconfig::Envconfig;
+//! use yasec::Yasec;
 //!
-//! #[derive(Envconfig)]
+//! #[derive(Yasec)]
 //! struct Config {
-//!     #[envconfig(from = "DB_HOST")]
+//!     #[yasec(from = "DB_HOST")]
 //!     pub db_host: String,
 //!
-//!     #[envconfig(from = "DB_PORT")]
+//!     #[yasec(from = "DB_PORT")]
 //!     pub db_port: Option<u16>,
 //!
-//!     #[envconfig(from = "HTTP_PORT", default = 8080)]
+//!     #[yasec(from = "HTTP_PORT", default = 8080)]
 //!     pub http_port: u16,
 //! }
 //!
@@ -48,4 +48,4 @@ mod traits;
 
 pub use context::Context;
 pub use error::{Error, ParseError};
-pub use traits::Envconfig;
+pub use traits::Yasec;

@@ -1,19 +1,19 @@
 #[macro_use]
-extern crate envconfig_derive;
-extern crate envconfig;
+extern crate yasec_derive;
+extern crate yasec;
 
 use std::env;
 use std::error::Error as _;
 use std::num::ParseIntError;
 
-use envconfig::Envconfig;
+use yasec::Yasec;
 
-#[derive(Envconfig)]
+#[derive(Yasec)]
 pub struct Config {
-    #[envconfig(from = "DB_HOST")]
+    #[yasec(from = "DB_HOST")]
     pub db_host: String,
 
-    #[envconfig(from = "DB_PORT")]
+    #[yasec(from = "DB_PORT")]
     pub db_port: u16,
 }
 
@@ -72,7 +72,7 @@ fn test_custom_from_str() {
         y: i32,
     }
 
-    impl Envconfig for Point {
+    impl Yasec for Point {
         fn parse(s: &str) -> Result<Self, Box<dyn StdError>> {
             let coords: Vec<&str> = s
                 .trim_matches(|p| p == '(' || p == ')')
@@ -89,9 +89,9 @@ fn test_custom_from_str() {
         }
     }
 
-    #[derive(Envconfig)]
+    #[derive(Yasec)]
     pub struct Config {
-        #[envconfig(from = "DB_HOST")]
+        #[yasec(from = "DB_HOST")]
         point: Point,
     }
 
@@ -105,7 +105,7 @@ mod infer {
     use super::*;
     #[test]
     fn test_basic() {
-        #[derive(Envconfig)]
+        #[derive(Yasec)]
         pub struct Config {
             user: String,
             pass: String,
@@ -123,13 +123,13 @@ mod infer {
 
     #[test]
     fn test_nested() {
-        #[derive(Envconfig)]
+        #[derive(Yasec)]
         pub struct DB {
             user: String,
             pass: String,
         }
 
-        #[derive(Envconfig)]
+        #[derive(Yasec)]
         pub struct Config {
             db: DB,
             listen_port: u16,
@@ -150,7 +150,7 @@ mod infer {
 
     #[test]
     fn test_optional() {
-        #[derive(Envconfig)]
+        #[derive(Yasec)]
         pub struct Config {
             listen_port: Option<u16>,
             address: String,

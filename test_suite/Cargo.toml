@@ -1,12 +1,12 @@
 [package]
-name = "envconfig_test_suite"
+name = "yasec_test_suite"
 version = "0.2.0"
 authors = ["Sergey Potapov <blake131313@gmail.com>"]
 build = "build.rs"
 
 [dependencies]
-envconfig = { path = "../envconfig" }
-envconfig_derive = { path = "../envconfig_derive" }
+yasec = { path = "../yasec" }
+yasec_derive = { path = "../yasec_derive" }
 
 [build-dependencies]
 skeptic = "0.13"

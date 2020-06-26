@@ -1,5 +1,5 @@
-//! Provides a derive macro that implements `Envconfig` trait.
-//! For complete documentation please see [envconfig](https://docs.rs/envconfig).
+//! Provides a derive macro that implements `Yasec` trait.
+//! For complete documentation please see [yasec](https://docs.rs/yasec).
 
 extern crate proc_macro;
 extern crate proc_macro2;
@@ -12,37 +12,37 @@ use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use syn::{Attribute, DeriveInput, Field, Fields, Ident, Lit, Meta, NestedMeta};
 
-#[proc_macro_derive(Envconfig, attributes(envconfig))]
+#[proc_macro_derive(Yasec, attributes(yasec))]
 pub fn derive(input: TokenStream) -> TokenStream {
     let derive_input: DeriveInput = syn::parse(input).unwrap();
-    let gen = impl_envconfig(&derive_input);
+    let gen = impl_yasec(&derive_input);
     gen.into()
 }
 
-fn impl_envconfig(input: &DeriveInput) -> proc_macro2::TokenStream {
+fn impl_yasec(input: &DeriveInput) -> proc_macro2::TokenStream {
     use syn::Data::*;
     let struct_name = &input.ident;
 
     let inner_impl = match input.data {
         Struct(ref ds) => match ds.fields {
-            Fields::Named(ref fields) => impl_envconfig_for_struct(struct_name, &fields.named),
-            _ => panic!("envconfig supports only named fields"),
+            Fields::Named(ref fields) => impl_yasec_for_struct(struct_name, &fields.named),
+            _ => panic!("yasec supports only named fields"),
         },
-        _ => panic!("envconfig only supports non-tuple structs"),
+        _ => panic!("yasec only supports non-tuple structs"),
     };
 
     quote!(#inner_impl)
 }
 
-fn impl_envconfig_for_struct(
+fn impl_yasec_for_struct(
     struct_name: &Ident,
     fields: &Punctuated<Field, Comma>,
 ) -> proc_macro2::TokenStream {
     let field_assigns = fields.iter().map(gen_field_assign);
 
     quote! {
-        impl Envconfig for #struct_name {
-            fn with_context(context: ::envconfig::Context<Self>) -> ::std::result::Result<Self, ::envconfig::Error> {
+        impl Yasec for #struct_name {
+            fn with_context(context: ::yasec::Context<Self>) -> ::std::result::Result<Self, ::yasec::Error> {
                 let config = Self {
                     #(#field_assigns,)*
                 };
@@ -53,7 +53,7 @@ fn impl_envconfig_for_struct(
 }
 
 fn gen_field_assign(field: &Field) -> proc_macro2::TokenStream {
-    match fetch_envconfig_attr_from_field(field) {
+    match fetch_yasec_attr_from_field(field) {
         Some(attr) => {
             let list = fetch_list_from_attr(field, attr);
             let from_value = find_item_in_list(field, &list, "from");
@@ -123,18 +123,18 @@ fn gen_field_assign_for_struct_type(
     }
 }
 
-fn fetch_envconfig_attr_from_field(field: &Field) -> Option<&Attribute> {
+fn fetch_yasec_attr_from_field(field: &Field) -> Option<&Attribute> {
     field.attrs.iter().find(|a| {
         let path = &a.path;
         let name = quote!(#path).to_string();
-        name == "envconfig"
+        name == "yasec"
     })
 }
 
 fn fetch_list_from_attr(field: &Field, attr: &Attribute) -> Punctuated<NestedMeta, Comma> {
     let opt_meta = attr.interpret_meta().unwrap_or_else(|| {
         panic!(
-            "Can not interpret meta of `envconfig` attribute on field `{}`",
+            "Can not interpret meta of `yasec` attribute on field `{}`",
             field_name(field)
         )
     });
@@ -142,7 +142,7 @@ fn fetch_list_from_attr(field: &Field, attr: &Attribute) -> Punctuated<NestedMet
     match opt_meta {
         Meta::List(l) => l.nested,
         _ => panic!(
-            "`envconfig` attribute on field `{}` must contain a list",
+            "`yasec` attribute on field `{}` must contain a list",
             field_name(field)
         ),
     }
@@ -158,12 +158,12 @@ fn find_item_in_list<'l, 'n>(
             NestedMeta::Meta(meta) => match meta {
                 Meta::NameValue(name_value) => name_value,
                 _ => panic!(
-                    "`envconfig` attribute on field `{}` must contain name/value item",
+                    "`yasec` attribute on field `{}` must contain name/value item",
                     field_name(field)
                 ),
             },
             _ => panic!(
-                "Failed to process `envconfig` attribute on field `{}`",
+                "Failed to process `yasec` attribute on field `{}`",
                 field_name(field)
             ),
         })

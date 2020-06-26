@@ -24,7 +24,7 @@ impl StdError for EmptyError {
 }
 
 /// Indicates that structure can be initialize from environment variables.
-pub trait Envconfig {
+pub trait Yasec {
     /// Creates empty context and calls `with_context`.
     fn init() -> Result<Self, Error>
     where
@@ -42,7 +42,7 @@ pub trait Envconfig {
 
     /// Initialize structure from environment variable from the passed context.
     /// By default calls `parse` method. It works for a basic type like number or string.
-    /// The method is redefined for a sctructure with `#[derive(Envconfig)`. In that case
+    /// The method is redefined for a sctructure with `#[derive(Yasec)`. In that case
     /// the method pick every field type and calls the method for the type.
     fn with_context(context: Context<Self>) -> Result<Self, Error>
     where
@@ -71,7 +71,7 @@ pub trait Envconfig {
 
 macro_rules! implement {
     ($x:ident) => {
-        impl Envconfig for $x {
+        impl Yasec for $x {
             fn parse(val: &str) -> Result<Self, Box<dyn StdError>> {
                 Ok(val.parse::<$x>()?)
             }
@@ -93,13 +93,13 @@ implement!(i64);
 implement!(f32);
 implement!(f64);
 
-impl Envconfig for String {
+impl Yasec for String {
     fn parse(val: &str) -> Result<Self, Box<dyn StdError>> {
         Ok(val.to_owned())
     }
 }
 
-impl<T: Envconfig> Envconfig for Option<T> {
+impl<T: Yasec> Yasec for Option<T> {
     fn with_context(context: Context<Self>) -> Result<Self, Error> {
         let env_var_name = context.prefix();
         let env_var_result = env::var(&env_var_name);

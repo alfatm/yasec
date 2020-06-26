@@ -1,17 +1,17 @@
 [package]
-name = "envconfig_derive"
+name = "yasec_derive"
 version = "1.0.0"
 authors = [
 	"Sergey Potapov <blake131313@gmail.com>",
 	"ANtlord <antlord92@gmail.com>",
 ]
-description = "Build a config object from environment variables without boilerplate."
+description = "Yet another stupid environment config (YASEC) derive crate."
 categories = ["config", "web-programming"]
 keywords = ["config", "env", "macro", "configuration", "environment"]
 license = "MIT"
-repository = "https://github.com/greyblake/envconfig-rs"
-homepage = "https://github.com/greyblake/envconfig-rs"
-documentation = "https://docs.rs/envconfig_derive"
+repository = "https://github.com/greyblake/yasec"
+homepage = "https://github.com/greyblake/yasecs"
+documentation = "https://docs.rs/yasec_derive"
 readme = "README.md"
 
 [lib]

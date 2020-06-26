@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "envconfig",
-    "envconfig_derive",
+    "yasec",
+    "yasec_derive",
     "test_suite"
 ]

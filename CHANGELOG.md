@@ -1,3 +1,11 @@
+#### v1.0.0 - 2020-02-06
+* Environment variable name prefix
+* Custom types
+* Inferring of an environment variable name
+* Prefix of an environment variable
+* Complete public interface rework
+* Default value has a type
+
 #### v0.6.0 - 2019-12-22
 * Support nested structures
 
@@ -15,8 +23,8 @@
 
 #### v0.3.0 - 2018-09-16
 * [breaking] Use `envconfig` attribute instead of `from` in the derive macro
-* [breaking] Remove init_or_die() function from Envconfig trait
-* [breaking] In envconfig_derive: rename function envconfig() -> derive()
+* [breaking] Remove init_or_die() function from Yasec trait
+* [breaking] In yasec_derive: rename function yasec() -> derive()
 * [improvement] Add better documentation to the crate
 
 #### v0.2.0 - 2018-09-13

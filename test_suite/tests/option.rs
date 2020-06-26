@@ -1,16 +1,16 @@
 #[macro_use]
-extern crate envconfig_derive;
-extern crate envconfig;
+extern crate yasec_derive;
+extern crate yasec;
 
 use std::env;
 use std::error::Error as _;
 use std::num::ParseIntError;
 
-use envconfig::Envconfig;
+use yasec::Yasec;
 
-#[derive(Envconfig)]
+#[derive(Yasec)]
 pub struct Config {
-    #[envconfig(from = "PORT")]
+    #[yasec(from = "PORT")]
     pub port: Option<u16>,
 }
 

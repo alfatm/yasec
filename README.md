@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/ANtlord/yasec.svg?branch=master)](https://travis-ci.org/ANtlord/yasec)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Build a config structure from environment variables in Rust without boilerplate.
+Yet another stupid environment config (YASEC) creates settings from environment variables. (Envconig-rs fork)
 
 ## Features
 
@@ -13,6 +13,8 @@ If a configuration field is inside another structure and it has path `db.passwor
 * Custom types.
 * Option type is optional.
 * Prefix of variables.
+
+I implemented everything what I require when I develop an application. Feel free to open an issue of a feature you miss as well as a pull request.
 
 ## Macro attributes
 
@@ -25,31 +27,31 @@ You can achieve this with the following code without boilerplate:
 
 ```rust
 #[macro_use]
-extern crate envconfig_derive;
-extern crate envconfig;
+extern crate yasec_derive;
+extern crate yasec;
 
 use std::error::Error as StdError;
-use envconfig::Envconfig;
+use yasec::Yasec;
 
-#[derive(Envconfig)]
+#[derive(Yasec)]
 pub struct DB {
     pub host: String,
     pub port: u16,
 }
 
-#[derive(Envconfig)]
+#[derive(Yasec)]
 pub struct Vendor {
-    #[envconfig(from = "API_KEY")]
+    #[yasec(from = "API_KEY")]
     pub key: String,
-    #[envconfig(from = "API_SECRET")]
+    #[yasec(from = "API_SECRET")]
     pub secret: String,
 }
 
-#[derive(Envconfig)]
+#[derive(Yasec)]
 pub struct Config {
     db: DB,
     vendor: Vendor,
-    #[envconfig(default = 8080)]
+    #[yasec(default = 8080)]
     listen_port: u16,
     callback_url: Option<String>,
     mode: Mode,
@@ -60,12 +62,12 @@ pub enum Mode {
     Server,
 }
 
-impl Envconfig for Mode {
+impl Yasec for Mode {
     fn parse(s: &str) -> Result<Self, Box<dyn StdError>> {
         match s {
             "CLIENT" => Ok(Self::Client),
             "SERVER" => Ok(Self::Server),
-            _ => Err(envconfig::ParseError::new(s).into()),
+            _ => Err(yasec::ParseError::new(s).into()),
         }
     }
 }

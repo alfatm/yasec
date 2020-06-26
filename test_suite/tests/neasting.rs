@@ -2,9 +2,9 @@
 extern crate yasec_derive;
 extern crate yasec;
 
-use yasec::Yasec;
 use std::env;
 use std::error::Error as _;
+use yasec::Yasec;
 
 #[derive(Yasec)]
 pub struct DBConfig {

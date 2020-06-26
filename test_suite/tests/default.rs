@@ -2,8 +2,8 @@
 extern crate yasec_derive;
 extern crate yasec;
 
-use yasec::Yasec;
 use std::env;
+use yasec::Yasec;
 
 #[derive(Yasec)]
 pub struct Config {

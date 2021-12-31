@@ -10,10 +10,10 @@ use yasec::Yasec;
 
 #[derive(Yasec)]
 pub struct Config {
-    #[yasec(from = "DB_HOST")]
+    #[yasec(env = "DB_HOST")]
     pub db_host: String,
 
-    #[yasec(from = "DB_PORT")]
+    #[yasec(env = "DB_PORT")]
     pub db_port: u16,
 }
 
@@ -56,7 +56,8 @@ fn test_fails_if_can_not_parse_db_port() {
     let err = Config::init().err().unwrap();
     assert!(
         err.source().unwrap().is::<ParseIntError>(),
-        format!("{:?}", &err.source())
+        "{:?}",
+        &err.source()
     );
 }
 
@@ -91,7 +92,7 @@ fn test_custom_from_str() {
 
     #[derive(Yasec)]
     pub struct Config {
-        #[yasec(from = "DB_HOST")]
+        #[yasec(env = "DB_HOST")]
         point: Point,
     }
 
@@ -163,5 +164,80 @@ mod infer {
         let config = Config::init().unwrap();
         assert_eq!(config.listen_port, port);
         assert_eq!(config.address, address);
+    }
+
+    #[test]
+    fn test_bool() {
+        #[derive(Yasec)]
+        pub struct Config {
+            enabled: bool,
+        }
+
+        env::set_var("ENABLED", "true");
+        let config = Config::init().unwrap();
+        assert_eq!(config.enabled, true);
+    }
+
+    #[test]
+    fn test_string_vector() {
+        #[derive(Yasec)]
+        pub struct Config {
+            #[yasec(default = "a,b,c")]
+            pub string_list: Vec<String>,
+        }
+
+        let config = Config::init().unwrap();
+        assert_eq!(config.string_list, vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn test_int_vector() {
+        #[derive(Yasec)]
+        pub struct Config {
+            #[yasec(default = "1,2,3")]
+            pub int_list: Vec<i32>,
+        }
+
+        let config = Config::init().unwrap();
+        assert_eq!(config.int_list, vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn test_size_units() {
+        use bytesize::ByteSize;
+
+        #[derive(Yasec)]
+        pub struct Config {
+            pub body_max_size: ByteSize,
+        }
+
+        env::set_var("BODY_MAX_SIZE", "15MB");
+        let config = Config::init().unwrap();
+        assert_eq!(config.body_max_size, ByteSize::mb(15));
+    }
+
+    #[test]
+    fn test_duration() {
+        use humantime::Duration;
+        #[derive(Yasec)]
+        pub struct Config {
+            some_ttl: Duration,
+
+            #[yasec(default = "567s")]
+            default_ttl: Duration,
+        }
+
+        env::set_var("SOME_TTL", "123s");
+        env::remove_var("DEFAULT_TTL");
+
+        let config = Config::init().unwrap();
+        assert_eq!(
+            *config.some_ttl.as_ref(),
+            std::time::Duration::from_secs(123)
+        );
+        assert_eq!(
+            *config.default_ttl.as_ref(),
+            std::time::Duration::from_secs(567)
+        );
     }
 }

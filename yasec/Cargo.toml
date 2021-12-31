@@ -1,6 +1,6 @@
 [package]
 name = "yasec"
-version = "1.0.0"
+version = "1.1.0"
 authors = [
 	"Sergey Potapov <blake131313@gmail.com>",
 	"ANtlord <antlord92@gmail.com>",
@@ -13,6 +13,12 @@ repository = "https://github.com/ANtlord/yasec"
 homepage = "https://github.com/ANtlord/yasec"
 documentation = "https://docs.rs/yasec"
 readme = "README.md"
+edition = "2021"
 
 [dev-dependencies]
-yasec_derive = { version = "1.0.0", path = "../yasec_derive" }
+yasec_derive = { version = "1.1.0", path = "../yasec_derive" }
+
+[dependencies]
+bytesize = "1.1.0"
+chrono = "0.4.19"
+humantime = "2.1.0"

@@ -10,7 +10,7 @@ use yasec::Yasec;
 
 #[derive(Yasec)]
 pub struct Config {
-    #[yasec(from = "PORT")]
+    #[yasec(env = "PORT")]
     pub port: Option<u16>,
 }
 

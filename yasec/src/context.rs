@@ -1,10 +1,10 @@
-pub struct Context<T> {
+pub struct Context {
     prefix: Vec<String>,
     var_name: String,
-    default_var_value: Option<T>,
+    default_var_value: Option<String>,
 }
 
-impl<T> Context<T> {
+impl Context {
     pub fn new(prefix: impl AsRef<str>) -> Self {
         let prefix = prefix.as_ref().to_owned();
         let mut ret = Self {
@@ -47,15 +47,18 @@ impl<T> Context<T> {
         ret
     }
 
-    pub fn with_default_var_value<U>(&self, val: Option<U>) -> Context<U> {
-        Context {
+    pub fn with_default_value(&self, val: &str) -> Self {
+        Self {
             prefix: self.prefix.clone(),
             var_name: self.var_name.clone(),
-            default_var_value: val,
+            default_var_value: Some(String::from(val)),
         }
     }
 
-    pub fn take_default_var_value(&mut self) -> Option<T> {
-        self.default_var_value.take()
+    pub fn get_default_value(&self) -> Option<String> {
+        match &self.default_var_value {
+            Some(val) => Some(val.clone()),
+            None => None,
+        }
     }
 }

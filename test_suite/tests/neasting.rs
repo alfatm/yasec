@@ -8,10 +8,10 @@ use yasec::Yasec;
 
 #[derive(Yasec)]
 pub struct DBConfig {
-    #[yasec(from = "DB_HOST")]
+    #[yasec(env = "DB_HOST")]
     pub host: String,
 
-    #[yasec(from = "DB_PORT")]
+    #[yasec(env = "DB_PORT")]
     pub port: u16,
 }
 

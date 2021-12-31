@@ -1,3 +1,19 @@
+# Alfatm Yasec
+
+This is fork of https://github.com/ANtlord/yasec
+
+## Added features:
+
+- add "usage" command to print available environment variables
+- support bool type
+- support humantime::Duration type
+- support bytesize::ByteSize type
+- support string vector and int vector type
+- keyword "default" always contains a string representation of environment variable value, that parsed in runtime
+- Context is not a generic type anymore
+- rename keyword "from" to "env"
+- change edition to 2021
+
 # Yasec
 
 [![Build Status](https://travis-ci.org/ANtlord/yasec.svg?branch=master)](https://travis-ci.org/ANtlord/yasec)
@@ -7,19 +23,19 @@ Yet another stupid environment config (YASEC) creates settings from environment 
 
 ## Features
 
-* Nested configuration structure.
-* Inferring of an environment variable name. If a configuration field has name `password` then it gets value from environment variable `PASSWORD`.
-If a configuration field is inside another structure and it has path `db.password` it gets its value from variable `DB_PASSWORD`.
-* Custom types.
-* Option type is optional.
-* Prefix of variables.
+- Nested configuration structure.
+- Inferring of an environment variable name. If a configuration field has name `password` then it gets value from environment variable `PASSWORD`.
+  If a configuration field is inside another structure and it has path `db.password` it gets its value from variable `DB_PASSWORD`.
+- Custom types.
+- Option type is optional.
+- Prefix of variables.
 
 I implemented everything what I require when I develop an application. Feel free to open an issue of a feature you miss as well as a pull request.
 
 ## Macro attributes
 
-* `from` - name of an environment variable which provides a field value. Name of the field and name of the parent structures are ignored.
-* `default` - default value of a field if an environment variable doesn't exist. If the environment variable exist but has invalid value an error returns.
+- `from` - name of an environment variable which provides a field value. Name of the field and name of the parent structures are ignored.
+- `default` - default value of a field if an environment variable doesn't exist. If the environment variable exist but has invalid value an error returns.
 
 ## Usage
 
@@ -41,9 +57,9 @@ pub struct DB {
 
 #[derive(Yasec)]
 pub struct Vendor {
-    #[yasec(from = "API_KEY")]
+    #[yasec(env = "API_KEY")]
     pub key: String,
-    #[yasec(from = "API_SECRET")]
+    #[yasec(env = "API_SECRET")]
     pub secret: String,
 }
 
@@ -51,7 +67,7 @@ pub struct Vendor {
 pub struct Config {
     db: DB,
     vendor: Vendor,
-    #[yasec(default = 8080)]
+    #[yasec(default = "8080")]
     listen_port: u16,
     callback_url: Option<String>,
     mode: Mode,

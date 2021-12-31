@@ -1,13 +1,12 @@
 #[macro_use]
 extern crate yasec_derive;
-extern crate yasec;
 
 use std::env;
 use yasec::Yasec;
 
 #[derive(Yasec)]
 pub struct Config {
-    #[yasec(from = "PORT", default = 5432)]
+    #[yasec(env = "PORT", default = "5432")]
     pub port: u16,
 }
 

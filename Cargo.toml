@@ -4,3 +4,5 @@ members = [
     "yasec_derive",
     "test_suite"
 ]
+
+resolver = "2"

@@ -14,13 +14,13 @@
 //!
 //! #[derive(Yasec)]
 //! struct Config {
-//!     #[yasec(from = "DB_HOST")]
+//!     #[yasec(env = "DB_HOST")]
 //!     pub db_host: String,
 //!
-//!     #[yasec(from = "DB_PORT")]
+//!     #[yasec(env = "DB_PORT")]
 //!     pub db_port: Option<u16>,
 //!
-//!     #[yasec(from = "HTTP_PORT", default = 8080)]
+//!     #[yasec(env = "HTTP_PORT", default = "8080")]
 //!     pub http_port: u16,
 //! }
 //!

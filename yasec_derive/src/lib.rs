@@ -39,14 +39,22 @@ fn impl_yasec_for_struct(
     fields: &Punctuated<Field, Comma>,
 ) -> proc_macro2::TokenStream {
     let field_assigns = fields.iter().map(gen_field_assign);
+    let usage_assigns = fields.iter().map(gen_field_usage);
 
     quote! {
         impl Yasec for #struct_name {
-            fn with_context(context: ::yasec::Context<Self>) -> ::std::result::Result<Self, ::yasec::Error> {
+            fn with_context(context: ::yasec::Context) -> ::std::result::Result<Self, ::yasec::Error> {
                 let config = Self {
                     #(#field_assigns,)*
                 };
                 Ok(config)
+            }
+
+            fn usage_with_context(context: ::yasec::Context) -> ::std::result::Result<Vec< ::yasec::Context>, ::yasec::Error> {
+                let output = vec![
+                    #(#usage_assigns,)*
+                ].into_iter().flatten().collect::<Vec< ::yasec::Context>>();
+                Ok(output)
             }
         }
     }
@@ -56,9 +64,9 @@ fn gen_field_assign(field: &Field) -> proc_macro2::TokenStream {
     match fetch_yasec_attr_from_field(field) {
         Some(attr) => {
             let list = fetch_list_from_attr(field, attr);
-            let from_value = find_item_in_list(field, &list, "from");
+            let env_name = find_item_in_list(field, &list, "env");
             let opt_default = find_item_in_list(field, &list, "default");
-            gen_field_assign_for_struct_type(field, from_value, opt_default)
+            gen_field_assign_for_struct_type(field, env_name, opt_default)
         }
         None => gen_field_assign_for_struct_type(field, None, None),
     }
@@ -106,7 +114,7 @@ fn gen_field_assign_for_struct_type(
                         context
                             .with_var_name(#var_name)
                             .push_prefix(#ident_str.to_owned())
-                            .with_default_var_value(Some(#default))
+                            .with_default_value(#default)
                     )?
                 },
                 None => quote! {
@@ -114,12 +122,57 @@ fn gen_field_assign_for_struct_type(
                         context
                             .with_var_name(#var_name)
                             .push_prefix(#ident_str.to_owned())
-                            .with_default_var_value(None)
                     )?
                 },
             }
         }
-        _ => panic!(format!("Expected field type to be a path: {:?}", ident)),
+        _ => panic!("Expected field type to be a path: {:?}", ident),
+    }
+}
+
+fn gen_field_usage(field: &Field) -> proc_macro2::TokenStream {
+    match fetch_yasec_attr_from_field(field) {
+        Some(attr) => {
+            let list = fetch_list_from_attr(field, attr);
+            let from_value = find_item_in_list(field, &list, "from");
+            let opt_default = find_item_in_list(field, &list, "default");
+            gen_field_usage_for_struct_type(field, from_value, opt_default)
+        }
+        None => gen_field_usage_for_struct_type(field, None, None),
+    }
+}
+
+fn gen_field_usage_for_struct_type(
+    field: &Field,
+    name: Option<&Lit>,
+    default: Option<&Lit>,
+) -> proc_macro2::TokenStream {
+    let ident = &field.ident;
+    let var_name = name.map(|x| remove_quotes(&to_s(x))).unwrap_or_default();
+    let ident_str = to_s(ident).to_uppercase();
+    match &field.ty {
+        syn::Type::Path(path) => {
+            let mut path = path.clone();
+            norm_path(&mut path);
+            match default {
+                Some(_) => quote! {
+                    #path :: usage_with_context(
+                        context
+                            .with_var_name(#var_name)
+                            .push_prefix(#ident_str.to_owned())
+                            .with_default_value(#default)
+                    )?
+                },
+                None => quote! {
+                    #path :: usage_with_context(
+                        context
+                            .with_var_name(#var_name)
+                            .push_prefix(#ident_str.to_owned())
+                    )?
+                },
+            }
+        }
+        _ => panic!("Expected field type to be a path: {:?}", ident),
     }
 }
 
@@ -132,10 +185,11 @@ fn fetch_yasec_attr_from_field(field: &Field) -> Option<&Attribute> {
 }
 
 fn fetch_list_from_attr(field: &Field, attr: &Attribute) -> Punctuated<NestedMeta, Comma> {
-    let opt_meta = attr.interpret_meta().unwrap_or_else(|| {
+    let opt_meta = attr.parse_meta().unwrap_or_else(|e| {
         panic!(
-            "Can not interpret meta of `yasec` attribute on field `{}`",
-            field_name(field)
+            "Can not interpret meta of `yasec` attribute on field `{}`, {}",
+            field_name(field),
+            e
         )
     });
 
@@ -168,7 +222,7 @@ fn find_item_in_list<'l, 'n>(
             ),
         })
         .find(|name_value| {
-            let ident = &name_value.ident;
+            let ident = &name_value.path;
             let name = quote!(#ident).to_string();
             name == item_name
         })

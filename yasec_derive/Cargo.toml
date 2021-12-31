@@ -1,6 +1,6 @@
 [package]
 name = "yasec_derive"
-version = "1.0.0"
+version = "1.1.0"
 authors = [
 	"Sergey Potapov <blake131313@gmail.com>",
 	"ANtlord <antlord92@gmail.com>",
@@ -13,11 +13,12 @@ repository = "https://github.com/greyblake/yasec"
 homepage = "https://github.com/greyblake/yasecs"
 documentation = "https://docs.rs/yasec_derive"
 readme = "README.md"
+edition = "2021"
 
 [lib]
 proc-macro = true
 
 [dependencies]
-syn = "0.15.4"
-quote = "0.6.8"
-proc-macro2 = "0.4.19"
+syn = "1.0.84"
+quote = "1.0.14"
+proc-macro2 = "1.0.36"

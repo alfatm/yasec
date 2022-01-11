@@ -115,6 +115,7 @@ macro_rules! implement {
     };
 }
 
+implement!(usize);
 implement!(char);
 implement!(u8);
 implement!(u16);

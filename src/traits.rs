@@ -1,42 +1,23 @@
-use crate::context::Context;
-use crate::Error;
+use super::context::Context;
+use super::YasecError;
 use std::env;
-use std::error::Error as StdError;
-use std::fmt;
 
-pub use bytesize::ByteSize;
-pub use humantime::Duration;
+type StdError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
-#[derive(Debug)]
-struct EmptyError;
-
-impl fmt::Display for EmptyError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "parse method no implemented!")
-    }
-}
-
-impl StdError for EmptyError {
-    fn description(&self) -> &str {
-        "Method parse is not implemented"
-    }
-
-    fn source(&self) -> Option<&(dyn StdError + 'static)> {
-        None
-    }
-}
+use bytesize::ByteSize;
+use humantime::Duration;
 
 /// Indicates that structure can be initialize from environment variables.
 pub trait Yasec {
     /// Creates empty context and calls `with_context`.
-    fn init() -> Result<Self, Error>
+    fn init() -> Result<Self, YasecError>
     where
         Self: Sized,
     {
         Self::with_prefix("")
     }
 
-    fn with_prefix(prefix: impl AsRef<str>) -> Result<Self, Error>
+    fn with_prefix(prefix: impl AsRef<str>) -> Result<Self, YasecError>
     where
         Self: Sized,
     {
@@ -47,38 +28,49 @@ pub trait Yasec {
     /// By default calls `parse` method. It works for a basic type like number or string.
     /// The method is redefined for a sctructure with `#[derive(Yasec)`. In that case
     /// the method pick every field type and calls the method for the type.
-    fn with_context(context: Context) -> Result<Self, Error>
+    fn with_context(context: Context) -> Result<Self, YasecError>
     where
         Self: Sized,
     {
         let env_var_name = context.infer_var_name();
         match env::var(&env_var_name) {
-            Ok(ref x) => Self::parse(x).map_err(|e| Error::new(e, env_var_name, x.to_owned())),
+            Ok(ref value) => Self::parse(value).map_err(|e| YasecError::ParseError {
+                var_name: env_var_name,
+                var_value: value.to_owned(),
+                source: e,
+            }),
             Err(e) => match context.get_default_value() {
-                Some(default) => Self::parse(&default)
-                    .map_err(|e| Error::new(e, env_var_name, default.to_owned())),
-                None => Err(Error::new(Box::new(e), env_var_name, None)),
+                Some(default) => Self::parse(&default).map_err(|e| YasecError::ParseError {
+                    var_name: env_var_name,
+                    var_value: default.to_owned(),
+                    source: e,
+                }),
+                None => Err(YasecError::ParseError {
+                    var_name: env_var_name,
+                    var_value: "".to_owned(),
+                    source: Box::new(e),
+                }),
             },
         }
     }
 
     /// Parses an environment variable value. It sould be implemented if an object is leaf of a
     /// configuration structure.
-    fn parse(_val: &str) -> Result<Self, Box<dyn StdError>>
+    fn parse(_val: &str) -> Result<Self, StdError>
     where
         Self: Sized,
     {
-        Err(Box::new(EmptyError))
+        Err(Box::new(YasecError::EmptyVar))
     }
 
-    fn usage() -> Result<String, Error>
+    fn usage() -> Result<String, YasecError>
     where
         Self: Sized,
     {
         Self::usage_prefix("")
     }
 
-    fn usage_prefix(prefix: impl AsRef<str>) -> Result<String, Error>
+    fn usage_prefix(prefix: impl AsRef<str>) -> Result<String, YasecError>
     where
         Self: Sized,
     {
@@ -89,7 +81,7 @@ pub trait Yasec {
             .join("\n"))
     }
 
-    fn usage_with_context(context: Context) -> Result<Vec<Context>, Error>
+    fn usage_with_context(context: Context) -> Result<Vec<Context>, YasecError>
     where
         Self: Sized,
     {
@@ -108,7 +100,7 @@ pub fn format_field_usage(context: &Context) -> String {
 macro_rules! implement {
     ($x:ident) => {
         impl Yasec for $x {
-            fn parse(val: &str) -> Result<Self, Box<dyn StdError>> {
+            fn parse(val: &str) -> Result<Self, StdError> {
                 Ok(val.parse::<$x>()?)
             }
         }
@@ -135,46 +127,50 @@ implement!(Duration); // "60s"
 implement!(ByteSize); // "1.50MB"
 
 impl Yasec for String {
-    fn parse(val: &str) -> Result<Self, Box<dyn StdError>> {
+    fn parse(val: &str) -> Result<Self, StdError> {
         Ok(val.to_owned())
     }
 }
 
 impl Yasec for Vec<String> {
-    fn parse(val: &str) -> Result<Self, Box<dyn StdError>> {
+    fn parse(val: &str) -> Result<Self, StdError> {
         return Ok(val
-            .split(",")
+            .split(',')
             .map(|s| s.trim().to_string())
             .collect::<Vec<String>>());
     }
 }
 
 impl Yasec for Vec<i32> {
-    fn parse(val: &str) -> Result<Self, Box<dyn StdError>> {
+    fn parse(val: &str) -> Result<Self, StdError> {
         let result = val
-            .split(",")
+            .split(',')
             .map(|s| s.trim().parse::<i32>())
             .collect::<Result<Vec<i32>, std::num::ParseIntError>>()
             .map_err(|e| e.into());
-        return result;
+        result
     }
 }
 
 impl<T: Yasec> Yasec for Option<T> {
-    fn with_context(context: Context) -> Result<Self, Error> {
+    fn with_context(context: Context) -> Result<Self, YasecError> {
         let env_var_name = context.prefix();
         let env_var_result = env::var(&env_var_name);
         match env_var_result {
-            Ok(ref x) => Self::parse(x).map_err(|e| Error::new(e, env_var_name, x.to_owned())),
+            Ok(ref value) => Self::parse(value).map_err(|e| YasecError::ParseError {
+                var_name: env_var_name,
+                var_value: value.to_owned(),
+                source: e,
+            }),
             Err(_) => Ok(None),
         }
     }
 
-    fn usage_with_context(context: Context) -> Result<Vec<Context>, Error> {
+    fn usage_with_context(context: Context) -> Result<Vec<Context>, YasecError> {
         Ok(vec![context])
     }
 
-    fn parse(val: &str) -> Result<Self, Box<dyn StdError>> {
+    fn parse(val: &str) -> Result<Self, StdError> {
         Ok(Some(T::parse(val)?))
     }
 }

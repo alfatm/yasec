@@ -46,8 +46,9 @@ You can achieve this with the following code without boilerplate:
 extern crate yasec_derive;
 extern crate yasec;
 
-use std::error::Error as StdError;
 use yasec::Yasec;
+
+type StdError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 #[derive(Yasec)]
 pub struct DB {
@@ -79,11 +80,11 @@ pub enum Mode {
 }
 
 impl Yasec for Mode {
-    fn parse(s: &str) -> Result<Self, Box<dyn StdError>> {
+    fn parse(s: &str) -> Result<Self, StdError> {
         match s {
             "CLIENT" => Ok(Self::Client),
             "SERVER" => Ok(Self::Server),
-            _ => Err(yasec::ParseError::new(s).into()),
+            _ => Err(yasec::YasecError::IllegalVar(s.into()).into()),
         }
     }
 }
@@ -120,7 +121,7 @@ Tests do some manipulation with environment variables, so to
 prevent flaky tests they have to be executed in a single thread:
 
 ```
-cargo test -- --test-threads=1
+cargo test --workspace -- --test-threads=1
 ```
 
 ## License

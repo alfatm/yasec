@@ -1,8 +1,27 @@
-[workspace]
-members = [
-    "yasec",
-    "yasec_derive",
-    "test_suite"
+[package]
+authors = [
+  "Sergey Potapov <blake131313@gmail.com>",
+  "ANtlord <antlord92@gmail.com>",
 ]
-
+categories = ["config"]
+description = "Yet another stupid environment config (YASEC) creates settings from environment variables."
+documentation = "https://docs.rs/yasec"
+edition = "2021"
+homepage = "https://github.com/ANtlord/yasec"
+keywords = ["config", "env", "macro", "configuration", "environment"]
+license = "MIT"
+name = "yasec"
+readme = "README.md"
+repository = "https://github.com/ANtlord/yasec"
 resolver = "2"
+version = "1.1.2"
+
+[dependencies]
+bytesize = "1.1.0"
+chrono = "0.4.19"
+humantime = "2.1.0"
+thiserror = "1.0.30"
+yasec_derive = {version = "1.1.1", path = "./yasec_derive"}
+
+[workspace]
+members = ["test_suite"]

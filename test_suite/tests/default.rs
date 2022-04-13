@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate yasec_derive;
-
 use std::env;
 use yasec::Yasec;
 

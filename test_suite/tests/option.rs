@@ -1,7 +1,3 @@
-#[macro_use]
-extern crate yasec_derive;
-extern crate yasec;
-
 use std::env;
 use std::error::Error as _;
 use std::num::ParseIntError;

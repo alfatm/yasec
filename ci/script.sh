@@ -11,4 +11,4 @@ touch ./*/*/*.rs
 cargo clippy -- -W warnings
 
 # Tests
-cargo test -- --test-threads=1
+cargo test --workspace -- --test-threads=1

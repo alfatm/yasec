@@ -1,13 +1,8 @@
 //! Provides a derive macro that implements `Yasec` trait.
 //! For complete documentation please see [yasec](https://docs.rs/yasec).
 
-extern crate proc_macro;
-extern crate proc_macro2;
-extern crate syn;
-#[macro_use]
-extern crate quote;
-
 use proc_macro::TokenStream;
+use quote::*;
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use syn::{Attribute, DeriveInput, Field, Fields, Ident, Lit, Meta, NestedMeta};
@@ -43,14 +38,14 @@ fn impl_yasec_for_struct(
 
     quote! {
         impl Yasec for #struct_name {
-            fn with_context(context: ::yasec::Context) -> ::std::result::Result<Self, ::yasec::Error> {
+            fn with_context(context: ::yasec::Context) -> ::std::result::Result<Self, ::yasec::YasecError> {
                 let config = Self {
                     #(#field_assigns,)*
                 };
                 Ok(config)
             }
 
-            fn usage_with_context(context: ::yasec::Context) -> ::std::result::Result<Vec< ::yasec::Context>, ::yasec::Error> {
+            fn usage_with_context(context: ::yasec::Context) -> ::std::result::Result<Vec< ::yasec::Context>, ::yasec::YasecError> {
                 let output = vec![
                     #(#usage_assigns,)*
                 ].into_iter().flatten().collect::<Vec< ::yasec::Context>>();

@@ -56,9 +56,6 @@ impl Context {
     }
 
     pub fn get_default_value(&self) -> Option<String> {
-        match &self.default_var_value {
-            Some(val) => Some(val.clone()),
-            None => None,
-        }
+        self.default_var_value.as_ref().cloned()
     }
 }

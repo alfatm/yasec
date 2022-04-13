@@ -1,24 +1,24 @@
 [package]
-name = "yasec_derive"
-version = "1.1.0"
 authors = [
-	"Sergey Potapov <blake131313@gmail.com>",
-	"ANtlord <antlord92@gmail.com>",
+  "Sergey Potapov <blake131313@gmail.com>",
+  "ANtlord <antlord92@gmail.com>",
 ]
-description = "Yet another stupid environment config (YASEC) derive crate."
 categories = ["config", "web-programming"]
+description = "Yet another stupid environment config (YASEC) derive crate."
+documentation = "https://docs.rs/yasec_derive"
+edition = "2021"
+homepage = "https://github.com/greyblake/yasecs"
 keywords = ["config", "env", "macro", "configuration", "environment"]
 license = "MIT"
-repository = "https://github.com/greyblake/yasec"
-homepage = "https://github.com/greyblake/yasecs"
-documentation = "https://docs.rs/yasec_derive"
+name = "yasec_derive"
 readme = "README.md"
-edition = "2021"
+repository = "https://github.com/greyblake/yasec"
+version = "1.1.2"
 
 [lib]
 proc-macro = true
 
 [dependencies]
-syn = "1.0.84"
-quote = "1.0.14"
 proc-macro2 = "1.0.36"
+quote = "1.0.14"
+syn = "1.0.84"

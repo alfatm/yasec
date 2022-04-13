@@ -1,7 +1,3 @@
-#[macro_use]
-extern crate yasec_derive;
-extern crate yasec;
-
 use std::env;
 use std::error::Error as _;
 use std::num::ParseIntError;
@@ -43,7 +39,7 @@ fn test_checks_presence_of_env_vars() {
     let err = Config::init().err().unwrap();
     // let expected_err = Error::EnvVarMissing { name: "DB_PORT".to_owned() };
     // assert_eq!(err, expected_err);
-    assert_eq!(true, err.source().unwrap().is::<env::VarError>());
+    assert!(err.source().unwrap().is::<env::VarError>());
 }
 
 #[test]
@@ -74,7 +70,7 @@ fn test_custom_from_str() {
     }
 
     impl Yasec for Point {
-        fn parse(s: &str) -> Result<Self, Box<dyn StdError>> {
+        fn parse(s: &str) -> Result<Self, Box<dyn StdError + Send + Sync + 'static>> {
             let coords: Vec<&str> = s
                 .trim_matches(|p| p == '(' || p == ')')
                 .split(',')
@@ -160,7 +156,7 @@ mod infer {
         let port = Some(1235u16);
         let address = "localhost";
         env::set_var("LISTEN_PORT", "1235");
-        env::set_var("ADDRESS", &address.to_string());
+        env::set_var("ADDRESS", address);
         let config = Config::init().unwrap();
         assert_eq!(config.listen_port, port);
         assert_eq!(config.address, address);
@@ -175,7 +171,7 @@ mod infer {
 
         env::set_var("ENABLED", "true");
         let config = Config::init().unwrap();
-        assert_eq!(config.enabled, true);
+        assert!(config.enabled);
     }
 
     #[test]

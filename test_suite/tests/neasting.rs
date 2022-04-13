@@ -1,7 +1,3 @@
-#[macro_use]
-extern crate yasec_derive;
-extern crate yasec;
-
 use std::env;
 use std::error::Error as _;
 use yasec::Yasec;
@@ -52,7 +48,7 @@ fn test_neasting_error() {
     let err = Config::init().err().unwrap();
 
     // let expected_err = Error::EnvVarMissing { name: "DB_PORT".to_owned() };
-    assert_eq!(true, err.source().unwrap().is::<env::VarError>());
+    assert!(err.source().unwrap().is::<env::VarError>());
 }
 
 #[test]

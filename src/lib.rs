@@ -46,6 +46,7 @@ mod context;
 mod error;
 mod traits;
 
-pub use context::Context;
-pub use error::{Error, ParseError};
-pub use traits::Yasec;
+pub use context::*;
+pub use error::*;
+pub use traits::*;
+pub use yasec_derive::*;

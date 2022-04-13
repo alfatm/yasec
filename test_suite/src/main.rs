@@ -1,11 +1,10 @@
-#[macro_use]
-extern crate yasec_derive;
-extern crate yasec;
-
 use yasec::Yasec;
 
 use bytesize::ByteSize;
 use humantime::Duration;
+
+type StdError = Box<dyn std::error::Error + Send + Sync + 'static>;
+type Result<T> = std::result::Result<T, StdError>;
 
 // TODO enums
 
@@ -75,7 +74,6 @@ pub struct Config {
 
 // Ensure custom Result can be defined in the current context.
 // See: https://github.com/greyblake/yasec-rs/issues/21
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 fn main() {
     println!("{}", Config::usage().expect("usage"));

@@ -78,9 +78,13 @@ pub struct Config {
 fn main() {
     println!("{}", Config::usage().expect("usage"));
 
-    let config = Config::init();
-    println!("{:#?}", config);
-
-    let res: Result<i32> = Ok(123);
-    println!("{:?}", res);
+    let result = Config::init();
+    match result {
+        Ok(config) => {
+            println!("config: {:#?}", config);
+        }
+        Err(err) => {
+            println!("error: {}", err);
+        }
+    }
 }

@@ -34,22 +34,21 @@ pub trait Yasec {
     {
         let env_var_name = context.infer_var_name();
         match env::var(&env_var_name) {
-            Ok(ref value) => Self::parse(value).map_err(|e| YasecError::ParseError {
+            Ok(ref value) => Self::parse(value).map_err(|e| YasecError::ParseEnvError {
                 var_name: env_var_name,
                 var_value: value.to_owned(),
                 source: e,
             }),
             Err(e) => match context.get_default_value() {
-                Some(default) => Self::parse(&default).map_err(|e| YasecError::ParseError {
+                Some(default) => Self::parse(&default).map_err(|e| YasecError::ParseDefaultError {
                     var_name: env_var_name,
                     var_value: default.to_owned(),
                     source: e,
                 }),
-                None => Err(YasecError::ParseError {
-                    var_name: env_var_name,
-                    var_value: "".to_owned(),
-                    source: Box::new(e),
-                }),
+                None => match e {
+                    env::VarError::NotPresent => Err(YasecError::EmptyVar(env_var_name)),
+                    env::VarError::NotUnicode(_) => Err(YasecError::IllegalVar(env_var_name)),
+                },
             },
         }
     }
@@ -60,7 +59,7 @@ pub trait Yasec {
     where
         Self: Sized,
     {
-        Err(Box::new(YasecError::EmptyVar))
+        Err(Box::new(YasecError::IllegalVar("".to_owned())))
     }
 
     fn usage() -> Result<String, YasecError>
@@ -157,7 +156,7 @@ impl<T: Yasec> Yasec for Option<T> {
         let env_var_name = context.prefix();
         let env_var_result = env::var(&env_var_name);
         match env_var_result {
-            Ok(ref value) => Self::parse(value).map_err(|e| YasecError::ParseError {
+            Ok(ref value) => Self::parse(value).map_err(|e| YasecError::ParseEnvError {
                 var_name: env_var_name,
                 var_value: value.to_owned(),
                 source: e,

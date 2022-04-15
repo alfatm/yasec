@@ -13,7 +13,7 @@ license = "MIT"
 name = "yasec_derive"
 readme = "README.md"
 repository = "https://github.com/greyblake/yasec"
-version = "1.1.2"
+version = "1.1.4"
 
 [lib]
 proc-macro = true

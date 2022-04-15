@@ -70,6 +70,9 @@ pub struct Config {
 
     #[yasec(default = "1,2,3")]
     pub int_list: Vec<i32>,
+
+    #[yasec(default = "a=b,c=d")]
+    pub strstrmap: std::collections::HashMap<String, String>,
 }
 
 // Ensure custom Result can be defined in the current context.

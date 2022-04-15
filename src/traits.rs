@@ -1,5 +1,6 @@
 use super::context::Context;
 use super::YasecError;
+use std::collections::HashMap;
 use std::env;
 
 type StdError = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -135,7 +136,7 @@ impl Yasec for Vec<String> {
     fn parse(val: &str) -> Result<Self, StdError> {
         return Ok(val
             .split(',')
-            .map(|s| s.trim().to_string())
+            .map(|s| s.to_string())
             .collect::<Vec<String>>());
     }
 }
@@ -148,6 +149,19 @@ impl Yasec for Vec<i32> {
             .collect::<Result<Vec<i32>, std::num::ParseIntError>>()
             .map_err(|e| e.into());
         result
+    }
+}
+
+impl Yasec for HashMap<String, String> {
+    fn parse(val: &str) -> Result<Self, StdError> {
+        let v = val
+            .split(',')
+            .map(|s| match s.split_once('=') {
+                Some((key, value)) => Ok((key.to_owned(), value.to_owned())),
+                None => Err(YasecError::IllegalVar(s.to_owned())),
+            })
+            .collect::<Result<HashMap<_, _>, YasecError>>()?;
+        Ok(v)
     }
 }
 

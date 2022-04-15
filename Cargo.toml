@@ -14,14 +14,14 @@ name = "yasec"
 readme = "README.md"
 repository = "https://github.com/ANtlord/yasec"
 resolver = "2"
-version = "1.1.2"
+version = "1.1.4"
 
 [dependencies]
 bytesize = "1.1.0"
 chrono = "0.4.19"
 humantime = "2.1.0"
 thiserror = "1.0.30"
-yasec_derive = {version = "1.1.1", path = "./yasec_derive"}
+yasec_derive = {version = "1.1.4", path = "./yasec_derive"}
 
 [build-dependencies]
 skeptic = "0.13"

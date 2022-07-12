@@ -1,6 +1,7 @@
 pub struct Context {
     prefix: Vec<String>,
     var_name: String,
+    var_type: String,
     default_var_value: Option<String>,
 }
 
@@ -10,6 +11,7 @@ impl Context {
         let mut ret = Self {
             prefix: vec![],
             var_name: String::default(),
+            var_type: String::default(),
             default_var_value: None,
         };
         if !prefix.is_empty() {
@@ -22,10 +24,11 @@ impl Context {
         self.prefix.join("_")
     }
 
-    pub fn with_var_name(&self, var_name: &str) -> Self {
+    pub fn with_var_name(&self, var_name: &str, var_type: &str) -> Self {
         Self {
             prefix: self.prefix.clone(),
             var_name: var_name.to_owned(),
+            var_type: var_type.to_owned(),
             default_var_value: None,
         }
     }
@@ -41,6 +44,7 @@ impl Context {
         let mut ret = Self {
             prefix: self.prefix.clone(),
             var_name: self.var_name.clone(),
+            var_type: self.var_type.clone(),
             default_var_value: None,
         };
         ret.prefix.push(val);
@@ -51,11 +55,16 @@ impl Context {
         Self {
             prefix: self.prefix.clone(),
             var_name: self.var_name.clone(),
+            var_type: self.var_type.clone(),
             default_var_value: Some(String::from(val)),
         }
     }
 
     pub fn get_default_value(&self) -> Option<String> {
         self.default_var_value.as_ref().cloned()
+    }
+
+    pub fn get_var_type(&self) -> String {
+        self.var_type.clone()
     }
 }

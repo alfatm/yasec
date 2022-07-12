@@ -98,6 +98,7 @@ fn gen_field_assign_for_struct_type(
 ) -> proc_macro2::TokenStream {
     let ident = &field.ident;
     let var_name = name.map(|x| remove_quotes(&to_s(x))).unwrap_or_default();
+    let var_type = to_s(&field.ty);
     let ident_str = to_s(ident).to_uppercase();
     match &field.ty {
         syn::Type::Path(path) => {
@@ -107,7 +108,7 @@ fn gen_field_assign_for_struct_type(
                 Some(_) => quote! {
                     #ident: #path :: with_context(
                         context
-                            .with_var_name(#var_name)
+                            .with_var_name(#var_name, #var_type)
                             .push_prefix(#ident_str.to_owned())
                             .with_default_value(#default)
                     )?
@@ -115,7 +116,7 @@ fn gen_field_assign_for_struct_type(
                 None => quote! {
                     #ident: #path :: with_context(
                         context
-                            .with_var_name(#var_name)
+                            .with_var_name(#var_name, #var_type)
                             .push_prefix(#ident_str.to_owned())
                     )?
                 },
@@ -144,6 +145,7 @@ fn gen_field_usage_for_struct_type(
 ) -> proc_macro2::TokenStream {
     let ident = &field.ident;
     let var_name = name.map(|x| remove_quotes(&to_s(x))).unwrap_or_default();
+    let var_type = to_s(&field.ty);
     let ident_str = to_s(ident).to_uppercase();
     match &field.ty {
         syn::Type::Path(path) => {
@@ -153,7 +155,7 @@ fn gen_field_usage_for_struct_type(
                 Some(_) => quote! {
                     #path :: usage_with_context(
                         context
-                            .with_var_name(#var_name)
+                            .with_var_name(#var_name, #var_type)
                             .push_prefix(#ident_str.to_owned())
                             .with_default_value(#default)
                     )?
@@ -161,7 +163,7 @@ fn gen_field_usage_for_struct_type(
                 None => quote! {
                     #path :: usage_with_context(
                         context
-                            .with_var_name(#var_name)
+                            .with_var_name(#var_name, #var_type)
                             .push_prefix(#ident_str.to_owned())
                     )?
                 },

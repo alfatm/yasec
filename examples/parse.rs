@@ -1,7 +1,6 @@
-use yasec::Yasec;
-
 use bytesize::ByteSize;
 use humantime::Duration;
+use yasec::Yasec;
 
 type StdError = Box<dyn std::error::Error + Send + Sync + 'static>;
 type Result<T> = std::result::Result<T, StdError>;
@@ -36,6 +35,9 @@ impl Yasec for Point {
 pub struct DB {
     #[yasec()]
     dsn: String,
+
+    #[yasec()]
+    secret: String,
 }
 
 #[allow(dead_code)]
@@ -55,6 +57,9 @@ pub struct Config {
 
     #[yasec(env = "POINT")]
     pub point: Point,
+
+    #[yasec(env = "MAYBE_DB")]
+    pub maybe_db: Option<DB>,
 
     #[yasec(default = "15MB")]
     pub body_max_size: ByteSize,
@@ -80,6 +85,12 @@ pub struct Config {
 
 fn main() {
     println!("{}", Config::usage().expect("usage"));
+    // std::env::set_var("HOST", "localhost");
+    // std::env::set_var("PORT", "1234");
+    // std::env::set_var("POINT", "(1,2)");
+    // std::env::set_var("LABEL", "val");
+    // std::env::set_var("MAYBE_DB_DSN", "dsn:...");
+    // std::env::set_var("MAYBE_DB_SECRET", "secret");
 
     let result = Config::init();
     match result {

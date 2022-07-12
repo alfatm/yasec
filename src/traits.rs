@@ -1,12 +1,12 @@
 use super::context::Context;
 use super::YasecError;
+use bytesize::ByteSize;
+use humantime::Duration;
+use regex::Regex;
 use std::collections::HashMap;
 use std::env;
 
 type StdError = Box<dyn std::error::Error + Send + Sync + 'static>;
-
-use bytesize::ByteSize;
-use humantime::Duration;
 
 /// Indicates that structure can be initialize from environment variables.
 pub trait Yasec {
@@ -74,11 +74,14 @@ pub trait Yasec {
     where
         Self: Sized,
     {
-        Ok(Self::usage_with_context(Context::new(prefix))?
+        let header = format!("{: <24}\t{: <32}\t{}", "NAME", "TYPE", "DEFAULT");
+        let delimiter = format!("{}", "-".repeat(90));
+        let values = Self::usage_with_context(Context::new(prefix))?
             .iter()
             .map(format_field_usage)
             .collect::<Vec<_>>()
-            .join("\n"))
+            .join("\n");
+        Ok(format!("{}\n{}\n{}", header, delimiter, values))
     }
 
     fn usage_with_context(context: Context) -> Result<Vec<Context>, YasecError>
@@ -89,10 +92,16 @@ pub trait Yasec {
     }
 }
 
+// NOTE replace std::collections::HashMap to HashMap
+lazy_static::lazy_static! {
+    static ref TYPE_REMOVE_PREFIX_RE: Regex = Regex::new(r"(\w+::)+(\w+)").unwrap();
+}
+
 pub fn format_field_usage(context: &Context) -> String {
     format!(
-        "{: <24}\t{:?}",
+        "{: <24}\t{: <32}\t{:?}",
         context.infer_var_name(),
+        TYPE_REMOVE_PREFIX_RE.replace_all(&context.get_var_type().replace(" ", ""), "$2"),
         context.get_default_value(),
     )
 }
@@ -168,19 +177,19 @@ impl Yasec for HashMap<String, String> {
 impl<T: Yasec> Yasec for Option<T> {
     fn with_context(context: Context) -> Result<Self, YasecError> {
         let env_var_name = context.prefix();
-        let env_var_result = env::var(&env_var_name);
-        match env_var_result {
-            Ok(ref value) => Self::parse(value).map_err(|e| YasecError::ParseEnvError {
-                var_name: env_var_name,
-                var_value: value.to_owned(),
-                source: e,
-            }),
-            Err(_) => Ok(None),
+        let found = std::env::vars()
+            .filter(|(k, _v)| k.starts_with(&env_var_name))
+            .collect::<Vec<(String, String)>>();
+
+        if found.len() == 0 {
+            return Ok(None);
         }
+
+        Ok(Some(T::with_context(context)?))
     }
 
     fn usage_with_context(context: Context) -> Result<Vec<Context>, YasecError> {
-        Ok(vec![context])
+        T::usage_with_context(context)
     }
 
     fn parse(val: &str) -> Result<Self, StdError> {

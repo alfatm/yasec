@@ -20,6 +20,8 @@ version = "1.1.4"
 bytesize = "1.1.0"
 chrono = "0.4.19"
 humantime = "2.1.0"
+lazy_static = "1.4.0"
+regex = "1.6.0"
 thiserror = "1.0.30"
 yasec_derive = {version = "1.1.4", path = "./yasec_derive"}
 

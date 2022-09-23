@@ -42,11 +42,7 @@ I implemented everything what I require when I develop an application. Feel free
 You can achieve this with the following code without boilerplate:
 
 ```rust
-#[macro_use]
-extern crate yasec_derive;
-extern crate yasec;
-
-use yasec::Yasec;
+use yasec::*;
 
 type StdError = Box<dyn std::error::Error + Send + Sync + 'static>;
 

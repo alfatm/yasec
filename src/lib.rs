@@ -5,12 +5,8 @@
 //! Example
 //!
 //! ```
-//! #[macro_use]
-//! extern crate yasec_derive;
-//! extern crate yasec;
-//!
+//! use yasec::*;
 //! use std::env;
-//! use yasec::Yasec;
 //!
 //! #[derive(Yasec)]
 //! struct Config {

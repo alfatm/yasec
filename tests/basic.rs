@@ -37,9 +37,7 @@ fn test_checks_presence_of_env_vars() {
     env::set_var("DB_HOST", "localhost");
 
     let err = Config::init().err().unwrap();
-    // let expected_err = Error::EnvVarMissing { name: "DB_PORT".to_owned() };
-    // assert_eq!(err, expected_err);
-    assert!(err.source().unwrap().is::<env::VarError>());
+    assert_eq!(err, yasec::YasecError::EmptyVar("DB_PORT".to_owned()));
 }
 
 #[test]

@@ -92,18 +92,31 @@ pub trait Yasec {
     }
 }
 
+pub fn format_field_usage(context: &Context) -> String {
+    format!(
+        "{: <24}\t{: <32}\t{}",
+        context.infer_var_name(),
+        format_usage_type(context),
+        format_usage_default(context),
+    )
+}
+
 // NOTE replace std::collections::HashMap to HashMap
 lazy_static::lazy_static! {
     static ref TYPE_REMOVE_PREFIX_RE: Regex = Regex::new(r"(\w+::)+(\w+)").unwrap();
 }
 
-pub fn format_field_usage(context: &Context) -> String {
-    format!(
-        "{: <24}\t{: <32}\t{:?}",
-        context.infer_var_name(),
-        TYPE_REMOVE_PREFIX_RE.replace_all(&context.get_var_type().replace(" ", ""), "$2"),
-        context.get_default_value(),
-    )
+pub fn format_usage_type(context: &Context) -> String {
+    TYPE_REMOVE_PREFIX_RE
+        .replace_all(&context.get_var_type().replace(" ", ""), "$2")
+        .to_string()
+}
+
+pub fn format_usage_default(context: &Context) -> String {
+    match context.get_default_value() {
+        Some(v) => v,
+        None => "-".to_string(),
+    }
 }
 
 macro_rules! implement {

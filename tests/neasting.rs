@@ -1,5 +1,4 @@
 use std::env;
-use std::error::Error as _;
 use yasec::Yasec;
 
 #[derive(Yasec)]
@@ -28,7 +27,7 @@ fn setup() {
 }
 
 #[test]
-fn test_neasting() {
+fn test_nesting() {
     setup();
 
     env::set_var("DB_HOST", "localhost");
@@ -40,15 +39,14 @@ fn test_neasting() {
 }
 
 #[test]
-fn test_neasting_error() {
+fn test_nesting_error() {
     setup();
 
     env::set_var("DB_HOST", "localhost");
 
     let err = Config::init().err().unwrap();
 
-    // let expected_err = Error::EnvVarMissing { name: "DB_PORT".to_owned() };
-    assert!(err.source().unwrap().is::<env::VarError>());
+    assert_eq!(err, yasec::YasecError::EmptyVar("DB_PORT".to_owned()));
 }
 
 #[test]
